@@ -295,3 +295,33 @@ class Resnet3DBuilder(object):
         """Build resnet 152."""
         return Resnet3DBuilder.build(input_shape, num_outputs, bottleneck,
                                      [3, 8, 36, 3], reg_factor=reg_factor)
+
+
+if __name__ == '__main__':
+
+    from keras.optimizers import Adam
+    import numpy as np
+    import os
+    
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0' 
+    os.environ['KERAS_BACKEND'] = 'tensorflow'
+
+    target_shape = (151, 139, 139, 1)
+    data_size = 10
+    num_outputs = 2
+
+    model = Resnet3DBuilder.build_resnet_18(target_shape, num_outputs)
+    
+    adam = Adam(lr=1e-3, amsgrad=True)
+    model.compile(loss="binary_crossentropy", optimizer=adam, metrics=['accuracy'])
+    print(model.summary())
+
+    # Mimic training
+
+    ## Data Preparation
+    sample_data = np.random.random((data_size, *target_shape))
+    sample_raw_labels = np.random.randint(0, num_outputs, data_size, dtype=int)
+    sample_labels = np.zeros((data_size, num_outputs))
+    sample_labels[np.arange(data_size), sample_raw_labels] = 1
+    ## Training
+    model.fit(sample_data, sample_labels, epochs=2, batch_size=1)
